@@ -1,0 +1,107 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Reporte Financiero") }} - {{ doc.name }}{% endblock %}
+
+{% block page_content %}
+<div class="container mt-4">
+    <!-- Navegación -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/mis_reportes">{{ _("Mis Reportes") }}</a></li>
+            <li class="breadcrumb-item active">{{ doc.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Encabezado -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fa fa-file-text-o"></i> {{ _("Reporte Financiero") }}
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>{{ _("Periodo") }}:</strong> {{ doc.periodo or '-' }}
+                </div>
+                <div class="col-md-4">
+                    <strong>{{ _("Tipo") }}:</strong> {{ doc.tipo_periodo or '-' }}
+                </div>
+                <div class="col-md-4">
+                    <strong>{{ _("Estado") }}:</strong>
+                    {% if doc.estado == "Listo" %}
+                        <span class="badge badge-success">{{ doc.estado }}</span>
+                    {% elif doc.estado == "Procesando" %}
+                        <span class="badge badge-info">{{ doc.estado }}</span>
+                    {% else %}
+                        <span class="badge badge-secondary">{{ doc.estado }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if doc.estado == "Listo" %}
+    
+    <!-- Dashboard View -->
+    {% if doc.dashboard_view %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fa fa-dashboard"></i> {{ _("Dashboard") }}</h5>
+        </div>
+        <div class="card-body">
+            {{ doc.dashboard_view | safe }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resumen Ejecutivo -->
+    {% if doc.summary %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fa fa-file-text"></i> {{ _("Resumen Ejecutivo") }}</h5>
+        </div>
+        <div class="card-body">
+            {{ doc.summary | safe }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- KPIs -->
+    {% if kpis %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fa fa-bar-chart"></i> {{ _("Indicadores Clave (KPIs)") }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for kpi in kpis %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{{ kpi.metric }}</h6>
+                            <h3 class="card-title text-primary">{{ kpi.value }}</h3>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fa fa-clock-o"></i> {{ _("El reporte aún está siendo procesado.") }}
+    </div>
+    {% endif %}
+
+    <!-- Botón volver -->
+    <div class="mt-4 mb-4">
+        <a href="/mis_reportes" class="btn btn-secondary">
+            <i class="fa fa-arrow-left"></i> {{ _("Volver a Mis Reportes") }}
+        </a>
+    </div>
+</div>
+{% endblock %}
+

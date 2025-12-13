@@ -60,15 +60,37 @@ app_license = "mit"
 # home_page = "login"
 
 # website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
+role_home_page = {
+	"Customer": "mis-reportes"
+}
 
 # Generators
 # ----------
 
 # automatically create page for each record of this doctype
 # website_generators = ["Web Page"]
+
+# Portal Menu Items
+# -----------------
+# Agregar items al menú del portal para clientes
+standard_portal_menu_items = [
+	{
+		"title": "Mis Reportes Financieros",
+		"route": "/mis-reportes",
+		"reference_doctype": "Financial Report",
+		"role": "Customer"
+	}
+]
+
+# Website Route Rules
+# -------------------
+# Rutas personalizadas para el portal
+website_route_rules = [
+	{
+		"from_route": "/reporte-financiero/<name>",
+		"to_route": "reporte-financiero/index"
+	}
+]
 
 # automatically load and sync documents of this doctype from downstream apps
 # importable_doctypes = [doctype_1]

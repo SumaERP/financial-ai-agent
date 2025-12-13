@@ -1,0 +1,67 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Mis Reportes Financieros") }}{% endblock %}
+
+{% block page_content %}
+<div class="container mt-4">
+    <h2>{{ _("Mis Reportes Financieros") }}</h2>
+    <p class="text-muted">{{ _("Consulte el estado de sus reportes financieros") }}</p>
+
+    <!-- DEBUG INFO -->
+    <div class="alert alert-secondary">
+        <strong>Debug:</strong> User={{ debug_user }}, Customer={{ debug_customer }}, Reportes={{ debug_reportes_count }}
+    </div>
+
+    {% if reportes %}
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>{{ _("Nombre") }}</th>
+                    <th>{{ _("Periodo") }}</th>
+                    <th>{{ _("Tipo") }}</th>
+                    <th>{{ _("Estado") }}</th>
+                    <th>{{ _("Fecha") }}</th>
+                    <th>{{ _("Acción") }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in reportes %}
+                <tr>
+                    <td>{{ reporte.name }}</td>
+                    <td>{{ reporte.periodo or '-' }}</td>
+                    <td>{{ reporte.tipo_periodo or '-' }}</td>
+                    <td>
+                        {% if reporte.estado == "Listo" %}
+                            <span class="badge badge-success">{{ reporte.estado }}</span>
+                        {% elif reporte.estado == "Procesando" %}
+                            <span class="badge badge-info">{{ reporte.estado }}</span>
+                        {% elif reporte.estado == "Error" %}
+                            <span class="badge badge-danger">{{ reporte.estado }}</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ reporte.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ frappe.utils.format_date(reporte.creation) }}</td>
+                    <td>
+                        {% if reporte.estado == "Listo" %}
+                            <a href="/reporte_financiero?name={{ reporte.name }}" class="btn btn-primary btn-sm">
+                                {{ _("Ver Reporte") }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">{{ _("No disponible") }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4">
+        <i class="fa fa-info-circle"></i> {{ _("No tiene reportes financieros asignados.") }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
