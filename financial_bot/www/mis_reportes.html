@@ -7,11 +7,6 @@
     <h2>{{ _("Mis Reportes Financieros") }}</h2>
     <p class="text-muted">{{ _("Consulte el estado de sus reportes financieros") }}</p>
 
-    <!-- DEBUG INFO -->
-    <div class="alert alert-secondary">
-        <strong>Debug:</strong> User={{ debug_user }}, Customer={{ debug_customer }}, Reportes={{ debug_reportes_count }}
-    </div>
-
     {% if reportes %}
     <div class="table-responsive mt-4">
         <table class="table table-bordered table-hover">

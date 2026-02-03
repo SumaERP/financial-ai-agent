@@ -90,18 +90,246 @@
     </div>
     {% endif %}
 
+    <!-- Chat con Asistente Financiero -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa fa-comments"></i> {{ _("Asistente Financiero") }}</h5>
+            <button id="clear-chat-btn" class="btn btn-sm btn-outline-light" title="{{ _('Limpiar historial') }}">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="chat-messages" class="mb-3" style="height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px; padding: 15px;">
+                {% if chat_history %}
+                    {% for msg in chat_history %}
+                    <div class="chat-message {{ 'user' if msg.role == 'User' else 'ai' }}">
+                        <div class="message-role">{{ _("Tú") if msg.role == 'User' else _("Asistente") }}</div>
+                        <div class="message-content">{{ msg.content | e }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-4" id="chat-empty-state">
+                    <i class="fa fa-comments fa-2x mb-2"></i>
+                    <p>{{ _("Haz preguntas sobre este análisis financiero") }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="input-group">
+                <input type="text" id="chat-input" class="form-control"
+                       placeholder="{{ _('Escribe tu pregunta sobre el reporte...') }}">
+                <div class="input-group-append">
+                    <button id="chat-send-btn" class="btn btn-primary" type="button">
+                        <i class="fa fa-paper-plane"></i> {{ _("Enviar") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% else %}
     <div class="alert alert-warning">
         <i class="fa fa-clock-o"></i> {{ _("El reporte aún está siendo procesado.") }}
     </div>
     {% endif %}
 
-    <!-- Botón volver -->
-    <div class="mt-4 mb-4">
+    <!-- Botones de acción -->
+    <div class="mt-4 mb-4 d-flex justify-content-between">
         <a href="/mis_reportes" class="btn btn-secondary">
             <i class="fa fa-arrow-left"></i> {{ _("Volver a Mis Reportes") }}
         </a>
+        {% if doc.estado == "Listo" %}
+        <button id="download-pdf-btn" class="btn btn-success" onclick="downloadPDF()">
+            <i class="fa fa-file-pdf-o"></i> {{ _("Descargar PDF") }}
+        </button>
+        {% endif %}
     </div>
 </div>
+
+<style>
+.chat-message {
+    margin-bottom: 12px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    max-width: 80%;
+}
+.chat-message.user {
+    background-color: #007bff;
+    color: white;
+    margin-left: auto;
+}
+.chat-message.ai {
+    background-color: #f1f1f1;
+    color: #333;
+}
+.chat-message .message-role {
+    font-size: 0.75em;
+    opacity: 0.7;
+    margin-bottom: 3px;
+}
+/* Estilos para markdown en el chat */
+.chat-message.ai .message-content p { margin: 0 0 8px 0; }
+.chat-message.ai .message-content p:last-child { margin-bottom: 0; }
+.chat-message.ai .message-content ul, .chat-message.ai .message-content ol { margin: 8px 0; padding-left: 20px; }
+.chat-message.ai .message-content li { margin-bottom: 4px; }
+.chat-message.ai .message-content strong { font-weight: 600; }
+.chat-message.ai .message-content code { background: #e9ecef; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
+.chat-message.ai .message-content pre { background: #2d2d2d; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto; }
+.chat-message.ai .message-content h1, .chat-message.ai .message-content h2, .chat-message.ai .message-content h3 { margin: 10px 0 5px 0; font-size: 1.1em; }
+</style>
+
+<!-- Librería marked.js para parsear Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+    const clearChatBtn = document.getElementById('clear-chat-btn');
+    const reportName = '{{ doc.name }}';
+
+    // Configurar marked para seguridad
+    marked.setOptions({ breaks: true, gfm: true });
+
+    // Renderizar markdown en mensajes existentes de AI
+    document.querySelectorAll('.chat-message.ai .message-content').forEach(el => {
+        el.innerHTML = marked.parse(el.textContent);
+    });
+
+    // Scroll al final del chat
+    scrollToBottom();
+
+    function addMessage(role, content) {
+        // Remover estado vacío si existe
+        const emptyState = document.getElementById('chat-empty-state');
+        if (emptyState) emptyState.remove();
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-message ' + (role === 'User' ? 'user' : 'ai');
+
+        // Parsear markdown solo para mensajes del AI
+        const displayContent = role === 'User' ? escapeHtml(content) : marked.parse(content);
+
+        msgDiv.innerHTML = `
+            <div class="message-role">${role === 'User' ? '{{ _("Tú") }}' : '{{ _("Asistente") }}'}</div>
+            <div class="message-content">${displayContent}</div>
+        `;
+        chatMessages.appendChild(msgDiv);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Limpiar historial del chat
+    clearChatBtn.addEventListener('click', function() {
+        if (!confirm('{{ _("¿Está seguro de limpiar el historial del chat?") }}')) return;
+
+        clearChatBtn.disabled = true;
+        frappe.call({
+            method: 'financial_bot.www.reporte_financiero.clear_chat_history',
+            args: { report_name: reportName },
+            callback: function(r) {
+                clearChatBtn.disabled = false;
+                if (r.message && r.message.success) {
+                    chatMessages.innerHTML = `
+                        <div class="text-center text-muted py-4" id="chat-empty-state">
+                            <i class="fa fa-comments fa-2x mb-2"></i>
+                            <p>{{ _("Haz preguntas sobre este análisis financiero") }}</p>
+                        </div>
+                    `;
+                }
+            },
+            error: function() {
+                clearChatBtn.disabled = false;
+                frappe.msgprint('{{ _("Error al limpiar el historial") }}');
+            }
+        });
+    });
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // Mostrar mensaje del usuario
+        addMessage('User', message);
+        chatInput.value = '';
+        scrollToBottom();
+
+        // Mostrar indicador de carga
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-message ai';
+        loadingDiv.id = 'loading-msg';
+        loadingDiv.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ _("Pensando...") }}';
+        chatMessages.appendChild(loadingDiv);
+        scrollToBottom();
+
+        // Deshabilitar input
+        chatInput.disabled = true;
+        chatSendBtn.disabled = true;
+
+        frappe.call({
+            method: 'financial_bot.financial_bot.doctype.financial_report.financial_report.send_chat_message',
+            args: {
+                doc_name: reportName,
+                message: message
+            },
+            callback: function(r) {
+                document.getElementById('loading-msg')?.remove();
+                if (r.message) {
+                    addMessage('AI', r.message);
+                }
+                scrollToBottom();
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+                chatInput.focus();
+            },
+            error: function() {
+                document.getElementById('loading-msg')?.remove();
+                addMessage('AI', '{{ _("Error al procesar. Intente nuevamente.") }}');
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+            }
+        });
+    }
+
+    chatSendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+});
+
+function downloadPDF() {
+    const btn = document.getElementById('download-pdf-btn');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ _("Generando...") }}';
+    btn.disabled = true;
+
+    frappe.call({
+        method: 'financial_bot.www.reporte_financiero.generate_pdf',
+        args: { report_name: '{{ doc.name }}' },
+        callback: function(r) {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            if (r.message && r.message.file_url) {
+                window.open(r.message.file_url, '_blank');
+            } else {
+                frappe.msgprint('{{ _("Error al generar el PDF") }}');
+            }
+        },
+        error: function() {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            frappe.msgprint('{{ _("Error al generar el PDF") }}');
+        }
+    });
+}
+</script>
 {% endblock %}
 

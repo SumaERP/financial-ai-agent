@@ -2,7 +2,8 @@ import frappe
 import json
 import base64
 from io import BytesIO
-from pdf2image import convert_from_path
+import fitz  # PyMuPDF
+from PIL import Image
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
@@ -23,8 +24,18 @@ class AnalysisService:
             file_doc = frappe.get_doc("File", {"file_url": doc.report_file})
             file_path = file_doc.get_full_path()
 
-            # 2. Convertir PDF a Imágenes (Primeras 5 páginas)
-            images = convert_from_path(file_path, first_page=1, last_page=5)
+            # 2. Convertir PDF a Imágenes (Primeras 5 páginas) usando PyMuPDF
+            images = []
+            pdf_document = fitz.open(file_path)
+            max_pages = min(5, len(pdf_document))
+            for page_num in range(max_pages):
+                page = pdf_document[page_num]
+                # Renderizar página a imagen con buena resolución (2x zoom)
+                mat = fitz.Matrix(2, 2)
+                pix = page.get_pixmap(matrix=mat)
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                images.append(img)
+            pdf_document.close()
             
             # 3. Prompt de "CFO Experto"
             prompt_text = """

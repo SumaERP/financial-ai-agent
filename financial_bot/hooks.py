@@ -61,7 +61,7 @@ app_license = "mit"
 
 # website user home page (by Role)
 role_home_page = {
-	"Customer": "mis-reportes"
+	"Customer": "mis_reportes"
 }
 
 # Generators
@@ -76,7 +76,7 @@ role_home_page = {
 standard_portal_menu_items = [
 	{
 		"title": "Mis Reportes Financieros",
-		"route": "/mis-reportes",
+		"route": "/mis_reportes",
 		"reference_doctype": "Financial Report",
 		"role": "Customer"
 	}
