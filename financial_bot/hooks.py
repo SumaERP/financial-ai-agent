@@ -30,7 +30,6 @@ app_license = "mit"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/financial_bot/css/financial_bot.css"
-# web_include_js = "/assets/financial_bot/js/financial_bot.js"
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "financial_bot/public/scss/website"
@@ -141,14 +140,15 @@ website_route_rules = [
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
+# Filtro automático para que usuarios del portal solo vean sus reportes
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"Financial Report": "financial_bot.financial_bot.doctype.financial_report.financial_report.get_permission_query_conditions",
+}
+
+has_permission = {
+	"Financial Report": "financial_bot.financial_bot.doctype.financial_report.financial_report.has_permission",
+}
 
 # Document Events
 # ---------------
@@ -221,7 +221,7 @@ website_route_rules = [
 
 # Request Events
 # ----------------
-# before_request = ["financial_bot.utils.before_request"]
+# El login/logout y los redirects globales se manejan de forma nativa en Frappe.
 # after_request = ["financial_bot.utils.after_request"]
 
 # Job Events

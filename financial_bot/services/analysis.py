@@ -131,9 +131,13 @@ class AnalysisService:
                 pass
 
     def list_to_html(self, items, icon, color):
+        """Convierte una lista de items en HTML con iconos"""
+        if not items:
+            return ""
         html = ""
         for item in items:
-            html += f'<div style="margin-bottom: 8px; color: #4a5568;"><span style="color: {color}; margin-right: 8px;">{icon}</span>{item}</div>'
+            if item and item.strip():  # Solo agregar items no vacíos
+                html += f'<div style="margin-bottom: 8px; color: #4a5568;"><span style="color: {color}; margin-right: 8px;">{icon}</span>{item.strip()}</div>'
         return html
 
     def generate_dashboard_html(self, data):
@@ -205,9 +209,10 @@ def regenerate_dashboard(doc_name):
     for row in doc.kpis:
         kpis.append({"metric": row.metric, "value": row.value})
 
-    insights = [doc.insights] if doc.insights else []
-    recommendations = [doc.recomendations] if doc.recomendations else []
-    risks = [doc.risks] if doc.risks else []
+    # Dividir por saltos de línea para obtener listas
+    insights = [item.strip() for item in doc.insights.split("\n") if item.strip()] if doc.insights else []
+    recommendations = [item.strip() for item in doc.recomendations.split("\n") if item.strip()] if doc.recomendations else []
+    risks = [item.strip() for item in doc.risks.split("\n") if item.strip()] if doc.risks else []
 
     analysis_data = {
         "period": doc.period or "",

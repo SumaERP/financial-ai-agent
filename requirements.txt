@@ -1,6 +1,0 @@
-langchain
-langchain-openai
-langchain-groq
-PyMuPDF
-Pillow
-tiktoken

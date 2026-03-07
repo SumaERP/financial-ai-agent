@@ -9,6 +9,12 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=15.0.0" # Installed and managed by bench.
+    "langchain",
+    "langchain-openai",
+    "langchain-groq",
+    "PyMuPDF==1.26.7",
+    "Pillow==12.1.0",
+    "tiktoken",
 ]
 
 [build-system]

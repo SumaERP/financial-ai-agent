@@ -134,18 +134,44 @@ def generate_pdf(report_name):
 
 
 def generate_pdf_html(doc, kpis):
-    """Genera el HTML para el PDF del reporte"""
+    """Genera el HTML para el PDF del reporte con iconos SVG y formato mejorado"""
+
+    # Iconos SVG que funcionan en PDF (wkhtmltopdf no soporta emojis)
+    icon_bulb = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d69e2e" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.9V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.1A7 7 0 0 0 12 2z"/></svg>'
+    icon_rocket = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>'
+    icon_alert = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+
+    # KPIs en formato tabla para PDF
     kpis_html = ""
     if kpis:
-        kpis_html = "<h2>Indicadores Clave (KPIs)</h2><table style='width:100%; border-collapse: collapse;'><tr>"
+        kpis_html = """
+        <div style="margin-bottom: 25px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+        """
         for kpi in kpis:
             kpis_html += f"""
-            <td style='text-align: center; padding: 15px; border: 1px solid #ddd;'>
-                <div style='color: #666; font-size: 12px;'>{kpi.metric}</div>
-                <div style='font-size: 20px; font-weight: bold; color: #007bff;'>{kpi.value}</div>
-            </td>
+                <td style="text-align: center; padding: 15px; border: 1px solid #e2e8f0; background: white;">
+                    <div style="color: #718096; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">{kpi.metric}</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #2d3748; margin-top: 5px;">{kpi.value}</div>
+                </td>
             """
-        kpis_html += "</tr></table>"
+        kpis_html += "</tr></table></div>"
+
+    # Generar listas con iconos SVG
+    def list_to_html_with_icons(items_str, icon, color):
+        if not items_str or not items_str.strip():
+            return ""
+        # Dividir por saltos de línea y filtrar vacíos
+        items = [item.strip() for item in items_str.split("\n") if item.strip()]
+        html = ""
+        for item in items:
+            html += f'<div style="margin-bottom: 10px; color: #4a5568; line-height: 1.5;"><span style="color: {color}; margin-right: 8px; vertical-align: middle; display: inline-block;">{icon}</span>{item}</div>'
+        return html
+
+    insights_html = list_to_html_with_icons(doc.insights if hasattr(doc, 'insights') else "", icon_bulb, "#d69e2e")
+    recs_html = list_to_html_with_icons(doc.recomendations if hasattr(doc, 'recomendations') else "", icon_rocket, "#38a169")
+    risks_html = list_to_html_with_icons(doc.risks if hasattr(doc, 'risks') else "", icon_alert, "#e53e3e")
 
     html = f"""
     <!DOCTYPE html>
@@ -153,14 +179,79 @@ def generate_pdf_html(doc, kpis):
     <head>
         <meta charset="UTF-8">
         <style>
-            body {{ font-family: Arial, sans-serif; padding: 20px; color: #333; }}
-            h1 {{ color: #2c3e50; border-bottom: 2px solid #007bff; padding-bottom: 10px; }}
-            h2 {{ color: #34495e; margin-top: 30px; }}
-            .info-box {{ background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
-            .info-item {{ display: inline-block; margin-right: 30px; }}
-            .label {{ font-weight: bold; color: #666; }}
-            .section {{ margin-bottom: 25px; padding: 15px; background: #fff; border: 1px solid #eee; border-radius: 5px; }}
-            .dashboard-section {{ background: #f8f9fa; padding: 15px; margin-bottom: 20px; }}
+            body {{
+                font-family: Arial, Helvetica, sans-serif;
+                padding: 20px;
+                color: #333;
+                font-size: 12px;
+                line-height: 1.4;
+            }}
+            h1 {{
+                color: #1a202c;
+                border-bottom: 3px solid #007bff;
+                padding-bottom: 10px;
+                font-size: 22px;
+                margin-bottom: 20px;
+            }}
+            h2 {{
+                color: #2d3748;
+                font-size: 14px;
+                margin-top: 0;
+                margin-bottom: 12px;
+            }}
+            .info-box {{
+                background: #f7fafc;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border: 1px solid #e2e8f0;
+            }}
+            .info-item {{
+                display: inline-block;
+                margin-right: 30px;
+            }}
+            .label {{
+                font-weight: bold;
+                color: #718096;
+            }}
+            .section-card {{
+                background: white;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }}
+            .insights-section {{
+                border-left: 4px solid #ecc94b;
+            }}
+            .insights-section h2 {{
+                color: #744210;
+            }}
+            .recs-section {{
+                border-left: 4px solid #48bb78;
+            }}
+            .recs-section h2 {{
+                color: #22543d;
+            }}
+            .risks-section {{
+                background: #fff5f5;
+                border: 1px solid #fed7d7;
+                border-left: 4px solid #e53e3e;
+            }}
+            .risks-section h2 {{
+                color: #c53030;
+            }}
+            .summary-section {{
+                background: #f7fafc;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }}
+            .summary-section p {{
+                color: #4a5568;
+                line-height: 1.6;
+                margin: 8px 0 0 0;
+            }}
         </style>
     </head>
     <body>
@@ -172,13 +263,17 @@ def generate_pdf_html(doc, kpis):
             <span class="info-item"><span class="label">Cliente:</span> {doc.cliente or '-'}</span>
         </div>
 
-        {f'<div class="section"><h2>Resumen Ejecutivo</h2>{doc.summary}</div>' if doc.summary else ''}
+        {f'<div class="summary-section"><h2>Resumen Ejecutivo</h2><p>{doc.summary}</p></div>' if doc.summary else ''}
 
         {kpis_html}
 
-        {f'<div class="dashboard-section">{doc.dashboard_view}</div>' if doc.dashboard_view else ''}
+        {f'<div class="section-card insights-section"><h2>Hallazgos Clave</h2>{insights_html}</div>' if insights_html else ''}
 
-        <div style="margin-top: 40px; text-align: center; color: #999; font-size: 11px;">
+        {f'<div class="section-card recs-section"><h2>Recomendaciones</h2>{recs_html}</div>' if recs_html else ''}
+
+        {f'<div class="section-card risks-section"><h2>Alertas de Riesgo</h2>{risks_html}</div>' if risks_html else ''}
+
+        <div style="margin-top: 40px; text-align: center; color: #999; font-size: 10px; border-top: 1px solid #eee; padding-top: 15px;">
             <p>Generado automáticamente por Financial Bot</p>
         </div>
     </body>
