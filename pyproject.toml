@@ -12,7 +12,7 @@ dependencies = [
     "langchain",
     "langchain-openai",
     "PyMuPDF==1.26.7",
-    "Pillow==11.3.0",
+    "Pillow==12.1.1",
     "tiktoken",
 ]
 
