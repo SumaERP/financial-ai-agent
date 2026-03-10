@@ -12,7 +12,7 @@ def get_llm():
     if not settings.openai_api_key:
         frappe.throw("⚠️ Configura la API Key en 'Financial AI Settings'")
     
-    model = settings.model_name or "gpt-5-mini"
+    model = settings.model_name or "gpt-4o-mini"
     # Temperatura baja para ser precisos con los números, pero creativa para el texto
     return ChatOpenAI(model=model, api_key=settings.get_password("openai_api_key"), temperature=0.5)
 
@@ -196,40 +196,3 @@ def run_analysis_job(doc_name):
     service = AnalysisService()
     service.process_document(doc_name)
 
-@frappe.whitelist()
-def regenerate_dashboard(doc_name):
-    """Regenera el dashboard HTML desde los datos existentes sin llamar a la IA"""
-    doc = frappe.get_doc("Financial Report", doc_name)
-
-    if doc.estado != "Listo":
-        frappe.throw("El documento debe estar en estado 'Listo' para regenerar el dashboard")
-
-    # Reconstruir datos desde los campos existentes
-    kpis = []
-    for row in doc.kpis:
-        kpis.append({"metric": row.metric, "value": row.value})
-
-    # Dividir por saltos de línea para obtener listas
-    insights = [item.strip() for item in doc.insights.split("\n") if item.strip()] if doc.insights else []
-    recommendations = [item.strip() for item in doc.recomendations.split("\n") if item.strip()] if doc.recomendations else []
-    risks = [item.strip() for item in doc.risks.split("\n") if item.strip()] if doc.risks else []
-
-    analysis_data = {
-        "period": doc.period or "",
-        "summary": doc.summary or "",
-        "kpis": kpis,
-        "insights": insights,
-        "recommendations": recommendations,
-        "risks": risks
-    }
-
-    # Regenerar el HTML del dashboard
-    service = AnalysisService()
-    dashboard_html = service.generate_dashboard_html(analysis_data)
-
-    # Guardar
-    doc.dashboard_view = dashboard_html
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    return True

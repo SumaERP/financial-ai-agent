@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         clearChatBtn.disabled = true;
         frappe.call({
-            method: 'financial_bot.www.reporte_financiero.clear_chat_history',
+            method: 'financial_bot.api.reports.clear_chat_history',
             args: { report_name: reportName },
             callback: function(r) {
                 clearChatBtn.disabled = false;
@@ -312,7 +312,7 @@ function downloadPDF() {
     btn.disabled = true;
 
     frappe.call({
-        method: 'financial_bot.www.reporte_financiero.generate_pdf',
+        method: 'financial_bot.api.reports.generate_pdf',
         args: { report_name: '{{ doc.name }}' },
         callback: function(r) {
             btn.innerHTML = originalContent;

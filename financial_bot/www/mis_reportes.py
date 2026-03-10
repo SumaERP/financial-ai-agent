@@ -1,89 +1,26 @@
 import frappe
+from financial_bot.utils.portal import get_customer_for_user
 
 no_cache = 1
 
+
 def get_context(context):
-    """Obtiene los reportes financieros asignados al cliente logueado"""
+	"""Obtiene los reportes financieros asignados al cliente logueado"""
+	if frappe.session.user == "Guest":
+		frappe.throw("Debe iniciar sesión para ver sus reportes", frappe.PermissionError)
 
-    # DEBUG: mostrar info
-    context.debug_user = frappe.session.user
+	customer = get_customer_for_user(frappe.session.user)
+	reportes = []
 
-    # Verificar que el usuario esté logueado
-    if frappe.session.user == "Guest":
-        frappe.throw("Debe iniciar sesión para ver sus reportes", frappe.PermissionError)
+	if customer:
+		reportes = frappe.get_all(
+			"Financial Report",
+			filters={"cliente": customer},
+			fields=["name", "periodo", "tipo_periodo", "estado", "creation"],
+			order_by="creation desc",
+			ignore_permissions=True,
+		)
 
-    # Obtener el Customer vinculado al usuario actual
-    customer = get_customer_for_user(frappe.session.user)
-    context.debug_customer = customer
-
-    if customer:
-        # Obtener reportes asignados a este cliente
-        # Usamos ignore_permissions porque ya validamos el acceso por Customer
-        reportes = frappe.get_all(
-            "Financial Report",
-            filters={"cliente": customer},
-            fields=["name", "periodo", "tipo_periodo", "estado", "creation"],
-            order_by="creation desc",
-            ignore_permissions=True
-        )
-    else:
-        reportes = []
-
-    context.debug_reportes_count = len(reportes)
-    context.reportes = reportes
-    return context
-
-
-def get_customer_for_user(user):
-    """Obtiene el Customer vinculado al usuario actual"""
-
-    # Buscar si hay un Contact con este usuario que esté vinculado a un Customer
-    contact = frappe.db.get_value(
-        "Contact",
-        {"user": user},
-        "name"
-    )
-
-    if contact:
-        # Buscar el Link dinámico a Customer
-        customer = frappe.db.get_value(
-            "Dynamic Link",
-            {
-                "parent": contact,
-                "parenttype": "Contact",
-                "link_doctype": "Customer"
-            },
-            "link_name"
-        )
-        return customer
-
-    return None
-
-
-@frappe.whitelist()
-def get_chat_history(report_name):
-    """Obtiene el historial de chat de un reporte financiero"""
-    if frappe.session.user == "Guest":
-        frappe.throw("Debe iniciar sesión", frappe.PermissionError)
-
-    # Verificar que el usuario tenga acceso al reporte
-    customer = get_customer_for_user(frappe.session.user)
-    if not customer:
-        frappe.throw("No tiene acceso a reportes", frappe.PermissionError)
-
-    # Verificar que el reporte pertenezca al cliente
-    report_customer = frappe.db.get_value("Financial Report", report_name, "cliente")
-    if report_customer != customer:
-        frappe.throw("No tiene permiso para ver este reporte", frappe.PermissionError)
-
-    # Obtener historial del chat
-    chat_history = frappe.get_all(
-        "Financial Chat Message",
-        filters={"parent": report_name, "parenttype": "Financial Report"},
-        fields=["role", "content"],
-        order_by="idx asc",
-        ignore_permissions=True
-    )
-
-    return chat_history
-
+	context.reportes = reportes
+	context.show_sidebar = True
+	return context

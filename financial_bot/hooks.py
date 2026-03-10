@@ -1,14 +1,14 @@
 app_name = "financial_bot"
-app_title = "financial_bot"
+app_title = "Financial Bot"
 app_publisher = "Quanta"
 app_description = "App de Gestion, Analysis y chatbot financiero"
 app_email = "osman@bequanta.com"
-app_license = "mit"
+app_license = "MIT"
 
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -59,9 +59,9 @@ app_license = "mit"
 # home_page = "login"
 
 # website user home page (by Role)
-role_home_page = {
-	"Customer": "mis_reportes"
-}
+# role_home_page = {
+# 	"Customer": "mis_reportes"
+# }
 
 # Generators
 # ----------
@@ -87,7 +87,7 @@ standard_portal_menu_items = [
 website_route_rules = [
 	{
 		"from_route": "/reporte-financiero/<name>",
-		"to_route": "reporte-financiero/index"
+		"to_route": "reporte_financiero"
 	}
 ]
 
@@ -107,12 +107,12 @@ website_route_rules = [
 # ------------
 
 # before_install = "financial_bot.install.before_install"
-# after_install = "financial_bot.install.after_install"
+after_install = "financial_bot.setup.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "financial_bot.uninstall.before_uninstall"
+before_uninstall = "financial_bot.setup.uninstall.before_uninstall"
 # after_uninstall = "financial_bot.uninstall.after_uninstall"
 
 # Integration Setup

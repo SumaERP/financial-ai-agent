@@ -11,9 +11,8 @@ dependencies = [
     # "frappe~=15.0.0" # Installed and managed by bench.
     "langchain",
     "langchain-openai",
-    "langchain-groq",
     "PyMuPDF==1.26.7",
-    "Pillow==12.1.0",
+    "Pillow==11.3.0",
     "tiktoken",
 ]
 

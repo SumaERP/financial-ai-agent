@@ -70,7 +70,7 @@ frappe.ui.form.on("Financial Report", {
 		if (frm.doc.estado === "Listo" && !frm.doc.dashboard_view) {
 			frm.add_custom_button(__("Regenerar Dashboard"), function() {
 				frappe.call({
-					method: "financial_bot.services.analysis.regenerate_dashboard",
+					method: "financial_bot.api.reports.regenerate_dashboard",
 					args: { doc_name: frm.doc.name },
 					freeze: true,
 					freeze_message: __("Regenerando dashboard..."),

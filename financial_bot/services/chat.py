@@ -7,7 +7,7 @@ def get_chat_llm():
     if not settings.openai_api_key:
         frappe.throw("⚠️ Configura la API Key")
     return ChatOpenAI(
-        model=settings.model_name or "gpt-5-mini", 
+        model=settings.model_name or "gpt-4o-mini",
         api_key=settings.get_password("openai_api_key"), 
         temperature=0.7
     )

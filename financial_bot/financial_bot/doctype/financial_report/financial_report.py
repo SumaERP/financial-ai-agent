@@ -1,5 +1,6 @@
 import frappe
 from frappe.model.document import Document
+from financial_bot.utils.portal import get_customer_for_user
 
 
 class FinancialReport(Document):
@@ -23,38 +24,6 @@ class FinancialReport(Document):
     def before_insert(self):
         """Establecer estado inicial al crear el documento"""
         self.estado = "Por Subir"
-
-    def on_update(self):
-        """Crear User Permission automáticamente para el cliente"""
-        self._sync_user_permissions()
-
-    def _sync_user_permissions(self):
-        """Sincroniza los User Permissions para usuarios del portal vinculados al cliente"""
-        if not self.cliente:
-            return
-
-        # Obtener los usuarios del portal vinculados a este cliente
-        portal_users = get_portal_users_for_customer(self.cliente)
-
-        for user in portal_users:
-            # Verificar si ya existe el User Permission
-            existing = frappe.db.exists(
-                "User Permission",
-                {
-                    "user": user,
-                    "allow": "Financial Report",
-                    "for_value": self.name
-                }
-            )
-            if not existing:
-                # Crear User Permission
-                frappe.get_doc({
-                    "doctype": "User Permission",
-                    "user": user,
-                    "allow": "Financial Report",
-                    "for_value": self.name,
-                    "apply_to_all_doctypes": 1
-                }).insert(ignore_permissions=True)
 
     def validate(self):
         """Validar el formato del periodo según el tipo"""
@@ -112,48 +81,6 @@ def send_chat_message(doc_name, message):
     from financial_bot.services.chat import ChatService
     service = ChatService()
     return service.chat(doc_name, message)
-
-
-def get_portal_users_for_customer(customer):
-    """
-    Obtiene los usuarios del portal vinculados a un Customer.
-    Busca en Contact -> Dynamic Link -> Customer.
-    """
-    users = []
-
-    # Buscar contactos vinculados a este Customer
-    contacts = frappe.db.sql("""
-        SELECT DISTINCT c.user
-        FROM `tabContact` c
-        INNER JOIN `tabDynamic Link` dl ON dl.parent = c.name AND dl.parenttype = 'Contact'
-        WHERE dl.link_doctype = 'Customer'
-        AND dl.link_name = %s
-        AND c.user IS NOT NULL
-        AND c.user != ''
-    """, (customer,), as_dict=True)
-
-    for contact in contacts:
-        users.append(contact.user)
-
-    return users
-
-
-def get_customer_for_user(user):
-    """Obtiene el Customer vinculado al usuario actual a través de Contact"""
-    contact = frappe.db.get_value("Contact", {"user": user}, "name")
-    if not contact:
-        return None
-
-    customer = frappe.db.get_value(
-        "Dynamic Link",
-        {
-            "parent": contact,
-            "parenttype": "Contact",
-            "link_doctype": "Customer"
-        },
-        "link_name"
-    )
-    return customer
 
 
 def get_permission_query_conditions(user):
