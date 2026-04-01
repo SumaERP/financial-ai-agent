@@ -12,7 +12,7 @@ def get_llm():
     if not settings.openai_api_key:
         frappe.throw("⚠️ Configura la API Key en 'Financial AI Settings'")
     
-    model = settings.model_name or "gpt-4o-mini"
+    model = settings.model_name or "gpt-5.4-nano-2026-03-17"
     # Temperatura baja para ser precisos con los números, pero creativa para el texto
     return ChatOpenAI(model=model, api_key=settings.get_password("openai_api_key"), temperature=0.5)
 
