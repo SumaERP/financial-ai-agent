@@ -13,6 +13,7 @@ def get_llm():
         frappe.throw("⚠️ Configura la API Key en 'Financial AI Settings'")
     
     model = settings.model_name or "gpt-5.4-nano-2026-03-17"
+    # Model change
     # Temperatura baja para ser precisos con los números, pero creativa para el texto
     return ChatOpenAI(model=model, api_key=settings.get_password("openai_api_key"), temperature=0.5)
 
