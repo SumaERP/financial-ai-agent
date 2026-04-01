@@ -20,6 +20,8 @@
   "recomendations",
   "risks",
   "dashboard_view",
+  "section_break_markdown",
+  "report_markdown",
   "chat_history"
  ],
  "fields": [
@@ -117,6 +119,17 @@
    "ignore_xss_filter": 1,
    "label": "Dashboard View",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_markdown",
+   "fieldtype": "Section Break",
+   "label": "Contenido del Reporte"
+  },
+  {
+   "description": "Transcripci\u00f3n completa del reporte extra\u00edda por IA. Puedes editarla antes de que el cliente use el chat.",
+   "fieldname": "report_markdown",
+   "fieldtype": "Markdown Editor",
+   "label": "Contenido del Reporte (Markdown)"
   },
   {
    "fieldname": "chat_history",

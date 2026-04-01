@@ -76,28 +76,50 @@ class AnalysisService:
                 img_str = base64.b64encode(buffered.getvalue()).decode()
                 content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_str}"}})
 
-            # 4. Invocar a la IA
+            # 4. Invocar a la IA (análisis estructurado JSON)
             llm = get_llm()
             response = llm.invoke([HumanMessage(content=content)])
-            
+
             # 5. Limpiar y Parsear Respuesta
             clean_json = response.content.replace("```json", "").replace("```", "").strip()
             data = json.loads(clean_json)
-            
+
+            # 6. Segunda pasada: extraer contenido completo del reporte a Markdown
+            #    Reutilizamos las mismas imágenes ya preparadas (sin coste extra de conversión)
+            markdown_prompt = (
+                "Eres un asistente de extracción de datos financieros. "
+                "Transcribe TODO el contenido de este reporte financiero a formato Markdown estructurado. "
+                "Captura con fidelidad absoluta: encabezados, tablas (usa sintaxis Markdown de tabla), "
+                "cifras, notas, pies de página y cualquier sección presente. "
+                "No omitas ningún dato numérico ni textual. "
+                "No añadas interpretaciones propias, solo transcribe. "
+                "Estructura el documento con encabezados ## para cada sección del reporte."
+            )
+            md_content = [{"type": "text", "text": markdown_prompt}]
+            for img in images:
+                buffered = BytesIO()
+                img.save(buffered, format="JPEG")
+                img_str = base64.b64encode(buffered.getvalue()).decode()
+                md_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_str}"}})
+
+            md_response = llm.invoke([HumanMessage(content=md_content)])
+            report_markdown = md_response.content.strip()
+
             # =========================================================
             # 🛑 SOLUCIÓN DEFINITIVA AL ERROR 1020
             # Instanciamos el documento de CERO justo antes de guardar
             # =========================================================
-            
+
             # 1. Obtenemos el documento fresco de la base de datos
             new_doc = frappe.get_doc("Financial Report", doc_name)
-            
+
             # 2. Actualizamos los campos en este nuevo objeto
             new_doc.period = data.get("period")
             new_doc.summary = data.get("summary")
             new_doc.insights = "\n".join(data.get("insights", []))
             new_doc.recomendations = "\n".join(data.get("recommendations", []))
             new_doc.risks = "\n".join(data.get("risks", []))
+            new_doc.report_markdown = report_markdown
             new_doc.dashboard_view = self.generate_dashboard_html(data)
             
             # 3. Limpiamos y llenamos la tabla hija en el nuevo objeto

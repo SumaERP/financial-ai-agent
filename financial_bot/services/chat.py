@@ -29,9 +29,24 @@ class ChatService:
         # 3. Construir el contexto (Memoria)
         messages = []
 
-        # System Prompt: Le damos contexto financiero con todos los datos
-        context_str = f"""
-Eres un asesor financiero experto. Estás analizando el reporte financiero del periodo {doc.periodo} ({doc.tipo_periodo}).
+        # System Prompt: preferimos report_markdown (transcripción completa) sobre los campos resumidos
+        if doc.report_markdown and doc.report_markdown.strip():
+            context_str = f"""Eres un asesor financiero experto. Estás analizando el reporte financiero del periodo {doc.periodo} ({doc.tipo_periodo}).
+Cliente: {doc.cliente}
+
+A continuación tienes la transcripción completa del reporte original. Úsala como fuente de verdad para responder cualquier pregunta con detalle:
+
+{doc.report_markdown}
+
+---
+INDICADORES CLAVE (KPIs) extraídos:
+{kpis_str}
+
+Responde al usuario basándote exclusivamente en los datos del reporte. Sé directo, profesional y útil.
+Cuando menciones cifras, usa los valores exactos que aparecen en el reporte."""
+        else:
+            # Fallback: usar los campos resumidos si aún no se generó el markdown
+            context_str = f"""Eres un asesor financiero experto. Estás analizando el reporte financiero del periodo {doc.periodo} ({doc.tipo_periodo}).
 Cliente: {doc.cliente}
 
 INDICADORES CLAVE (KPIs):
@@ -50,8 +65,7 @@ RECOMENDACIONES:
 {doc.recomendations or 'No disponible'}
 
 Responde al usuario basándote en estos datos. Sé directo, profesional y útil.
-Cuando menciones cifras, usa los valores exactos de los KPIs.
-        """
+Cuando menciones cifras, usa los valores exactos de los KPIs."""
         messages.append(SystemMessage(content=context_str))
 
         # Historial de conversación previo
